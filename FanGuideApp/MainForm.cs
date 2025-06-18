@@ -52,17 +52,43 @@ namespace FanGuideApp
         private void btnSearchRecord_Click(object sender, EventArgs e)
         {
             var sport = textBoxSearchSport.Text.Trim();
+
+            // Знаходимо рекордсмена для заданого виду спорту.
+            // Припускаємо, що чим більше значення рекорду, тим краще.
+            // Якщо для конкретного виду спорту (наприклад, гольф, біг) менше значення краще,
+            // тоді потрібно змінити OrderByDescending на OrderBy.
             var recordHolder = athletes
                 .Where(a => a.SportType.Equals(sport, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(a => a.PersonalRecord)
+                .OrderByDescending(a => a.PersonalRecord) // Тепер PersonalRecord є double, тому сортуємо числово
                 .FirstOrDefault();
 
-            MessageBox.Show(recordHolder != null ? $"Рекордсмен: {recordHolder.FullName}" : "Не знайдено.");
+            MessageBox.Show(recordHolder != null ?
+                $"Рекордсмен у виді спорту '{sport}': {recordHolder.FullName}, Особистий рекорд: {recordHolder.PersonalRecord}" :
+                "Не знайдено рекордсмена для цього виду спорту.");
         }
 
         private void btnSortByName_Click(object sender, EventArgs e)
         {
             athletes = athletes.OrderBy(a => a.FullName).ToList();
+            RefreshGrid();
+        }
+
+        private void btnSortBySportType_Click(object sender, EventArgs e)
+        {
+            athletes = athletes.OrderBy(a => a.SportType).ThenBy(a => a.FullName).ToList();
+            RefreshGrid();
+        }
+
+        private void btnSortByTeamOrClub_Click(object sender, EventArgs e)
+        {
+            athletes = athletes.OrderBy(a => a.TeamOrClub).ThenBy(a => a.FullName).ToList();
+            RefreshGrid();
+        }
+
+        private void btnSortByAge_Click(object sender, EventArgs e)
+        {
+            // Сортування від наймолодших до найстаріших
+            athletes = athletes.OrderByDescending(a => a.BirthDate).ToList();
             RefreshGrid();
         }
 
@@ -80,16 +106,36 @@ namespace FanGuideApp
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            File.WriteAllText("athletes.json", JsonSerializer.Serialize(athletes));
+            try
+            {
+                File.WriteAllText("athletes.json", JsonSerializer.Serialize(athletes, new JsonSerializerOptions { WriteIndented = true }));
+                MessageBox.Show("Дані збережено успішно!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Помилка збереження даних: {ex.Message}");
+            }
         }
 
         private void btnLoad_Click(object sender, EventArgs e)
         {
             if (File.Exists("athletes.json"))
             {
-                var json = File.ReadAllText("athletes.json");
-                athletes = JsonSerializer.Deserialize<List<Athlete>>(json);
-                RefreshGrid();
+                try
+                {
+                    var json = File.ReadAllText("athletes.json");
+                    athletes = JsonSerializer.Deserialize<List<Athlete>>(json);
+                    RefreshGrid();
+                    MessageBox.Show("Дані завантажено успішно!");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Помилка завантаження даних: {ex.Message}");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Файл 'athletes.json' не знайдено.");
             }
         }
     }

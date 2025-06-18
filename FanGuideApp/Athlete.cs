@@ -1,6 +1,6 @@
 namespace FanGuideApp
 {
-    using System; // Залишаємо using System; - воно потрібне для DateTime
+    using System;
 
     public class Athlete
     {
@@ -10,7 +10,7 @@ namespace FanGuideApp
         public string Origin { get; set; }
         public string SportType { get; set; }
         public string TeamOrClub { get; set; }
-        public string PersonalRecord { get; set; } // <--- Повернуто на string
+        public double PersonalRecord { get; set; } // Змінено на double
         public bool IsFavorite { get; set; }
     }
 }
